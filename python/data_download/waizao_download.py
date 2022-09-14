@@ -5,19 +5,6 @@ import os
 import datetime
 
 
-def sava_csv(data, path):
-    dir_name = os.path.dirname(path)
-    if not os.path.exists(dir_name):
-        os.mkdir(dir_name)
-    if os.path.exists(path):
-        og_data = pd.read_csv(path, dtype={'code':object})
-        last_date = og_data["tdate"][-1:].values
-        if last_date:
-            data = data[data["tdate"] > last_date[0]]
-            data = pd.concat([og_data, data])
-    data.to_csv(path, index=0)
-
-
 def RoughTimeDist(start_date, end_date):
     start_date = start_date.split('-')
     end_date = end_date.split('-')
@@ -41,9 +28,22 @@ class StockHSADayKlineDataset:
         self.dic = dic
         self.load_info = load_info_fun    #callback function
 
-    def __loadDayKline(self, path):
+    def __loadKline(self, path):
         data = pd.read_csv(path, dtype={'code':object})
         return data
+
+    def __saveKline(self, data, path):
+        dir_name = os.path.dirname(path)
+        if not os.path.exists(dir_name):
+            os.mkdir(dir_name)
+        if os.path.exists(path):
+            og_data = pd.read_csv(path, dtype={'code':object})
+            og_data = og_data[:-1] #先删除最后一行，因为month、week的kline最后一行也许不是周尾/月尾，需要更新
+            last_date = og_data["tdate"][-1:].values
+            if last_date:
+                data = data[data["tdate"] > last_date[0]]
+                data = pd.concat([og_data, data])
+        data.to_csv(path, index=0)
 
     def __getDayKline(self, codes, ktype, file_name, start_date):
         '''
@@ -70,7 +70,7 @@ class StockHSADayKlineDataset:
             code_str += codes[i]
 
         end_date = datetime.datetime.today().date()
-        print("update {} from {} to {}".format(code_str,start_date,end_date))
+        print("{} update {} from {} to {}".format(file_name, code_str,start_date,end_date))
 
         url = "{}?code={}&ktype={}&fq=1&startDate={}&endDate={}&export=5&token={}&fields=all".format(self.url_head, code_str, ktype, start_date, end_date, self.token)
         response = requests.get(url).json()
@@ -79,13 +79,13 @@ class StockHSADayKlineDataset:
         for code in codes:
             data = datas[datas["code"] == code]
             path = "{}/{}/{}".format(self.dic, code, file_name)
-            sava_csv(data, path)
+            self.__saveKline(data, path)
         return datas
 
     def __getLastUpdateDate(self, path, default="1990-01-01"):
         last_date = default
         if os.path.exists(path):
-            data = self.__loadDayKline(path)
+            data = self.__loadKline(path)
             date = data["tdate"][-1:].values
             if date:
                 last_date = date[0]
@@ -139,13 +139,13 @@ class StockHSADayKlineDataset:
         self.__updateKline(latest_date=latest_date, ktype="103", file_name="month_line.csv", items_th=12000)
 
     def loadDayKline(self, code):
-        return self.__loadDayKline(path="{}/{}/{}".format(self.dic, code, "day_line.csv"))
+        return self.__loadKline(path="{}/{}/{}".format(self.dic, code, "day_line.csv"))
 
     def loadWeekKline(self, code):
-        return self.__loadDayKline(path="{}/{}/{}".format(self.dic, code, "week_line.csv"))
+        return self.__loadKline(path="{}/{}/{}".format(self.dic, code, "week_line.csv"))
 
     def loadMonthKline(self, code):
-        return self.__loadDayKline(path="{}/{}/{}".format(self.dic, code, "month_line.csv"))
+        return self.__loadKline(path="{}/{}/{}".format(self.dic, code, "month_line.csv"))
 
 
 class StockHSAHourKlineDataset:
@@ -159,6 +159,18 @@ class StockHSAHourKlineDataset:
         self.token = token
         self.url_head = "http://api.waizaowang.com/doc/getStockHSAHourKLine"
         self.dic = dic
+
+    def __saveKline(self, data, path):
+        dir_name = os.path.dirname(path)
+        if not os.path.exists(dir_name):
+            os.mkdir(dir_name)
+        if os.path.exists(path):
+            og_data = pd.read_csv(path, dtype={'code':object})
+            last_date = og_data["tdate"][-1:].values
+            if last_date:
+                data = data[data["tdate"] > last_date[0]]
+                data = pd.concat([og_data, data])
+        data.to_csv(path, index=0)
 
     def __getHourKline(self, codes, ktype, file_name, start_date, end_date):
         '''
@@ -180,7 +192,7 @@ class StockHSAHourKlineDataset:
             code_str += ","
             code_str += codes[i]
 
-        print("update {} from {} to {}".format(code_str,start_date,end_date))
+        print("{} update {} from {} to {}".format(file_name, code_str,start_date,end_date))
 
         url = "{}?code={}&ktype={}&startDate={}&endDate={}&export=5&token={}&fields=all".format(self.url_head, code_str, ktype, start_date, end_date, self.token)
         response = requests.get(url).json()
@@ -200,7 +212,7 @@ class StockHSAHourKlineDataset:
             data = data.rename(columns={'tdate' : 'og_date', 'date' : 'tdate'})
 
             path = "{}/{}/{}".format(self.dic, code, file_name)
-            sava_csv(data, path)
+            self.__saveKline(data, path)
         return datas
 
     def __updateKline(self, days_th, ktype, file_name, codes, dates):
@@ -295,6 +307,12 @@ class StockHSADataset:
         self.daylines = StockHSADayKlineDataset(self.token, self.dic, self.loadBaseInfo)
         self.hourlines = StockHSAHourKlineDataset(self.token, self.dic)
 
+    def __saveInfo(self, data, path):
+        dir_name = os.path.dirname(path)
+        if not os.path.exists(dir_name):
+            os.mkdir(dir_name)
+        data.to_csv(path, index=0)
+
     def updataBaseInfo(self, file_name="/base/info.csv"):
         '''
         沪深京A股基本信息。
@@ -318,7 +336,7 @@ class StockHSADataset:
         data = pd.DataFrame(data=response['data'], columns=response['en'])
 
         path = self.dic + file_name
-        sava_csv(data, path)
+        self.__saveInfo(data, path)
         return data
 
     def loadBaseInfo(self, file_name="/base/info.csv"):
@@ -348,6 +366,7 @@ class StockHSADataset:
     def updateKlineDataset(self):
         self.daylines.update()
         self.hourlines.update(self.__getAllCodes(), self.__getLatestTradeDate())
+        print("update finish ! ^-^")
 
     def loadKline(self, code):
         day_kline = self.daylines.loadDayKline(code)
@@ -358,7 +377,6 @@ class StockHSADataset:
         min30_kline = self.hourlines.load30MinKline(code)
         min60_kline = self.hourlines.load60MinKline(code)
         return {"day":day_kline, "week": week_kline, "month": month_kline,
-                "min5_kline":min5_kline, "min15_kline":min15_kline, "min30_kline":min30_kline, "min60_kline":min60_kline}
-
+                "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
 
 
