@@ -48,7 +48,8 @@ class DayKlineDownloader:
                 data = pd.concat([og_data, data])
         data.to_csv(path, index=0)
 
-    def __loadKline(self, path):
+    def loadKline(self, code):
+        path = self.__getPath(code)
         data = pd.read_csv(path, dtype={'code':object})
         return data
 
@@ -82,9 +83,13 @@ class DayKlineDownloader:
         url = "{}?code={}&ktype={}&fq=1&startDate={}&endDate={}&export=5&token={}&fields=all".format(self.url_head, code_str, self.ktype, start_date, end_date, self.token)
         response = requests.get(url).json()
         datas = pd.DataFrame(data=response['data'], columns=response['en'])
+
+        lower_codes = datas["code"].str.lower()
+        datas["code"] = lower_codes
         
         for code in codes:
-            data = datas[datas["code"] == code]
+            lower_code = code.lower()
+            data = datas[datas["code"] == lower_code]
             self.__saveKline(data, code)
         return datas
 
@@ -155,6 +160,11 @@ class HourKlineDownloader:
         path = "{}/{}/{}".format(self.dic, code, self.file_name)
         return path
 
+    def loadKline(self, code):
+        path = self.__getPath(code)
+        data = pd.read_csv(path, dtype={'code':object})
+        return data
+
     def __saveKline(self, data, code):
         path = self.__getPath(code)
         dir_name = os.path.dirname(path)
@@ -215,9 +225,13 @@ class HourKlineDownloader:
         url = "{}?code={}&ktype={}&startDate={}&endDate={}&export=5&token={}&fields=all".format(self.url_head, code_str, self.ktype, start_date, end_date, self.token)
         response = requests.get(url).json()
         datas = pd.DataFrame(data=response['data'], columns=response['en'])
+
+        lower_codes = datas["code"].str.lower()
+        datas["code"] = lower_codes
         
         for code in codes:
-            data = datas[datas["code"] == code]
+            lower_code = code.lower()
+            data = datas[datas["code"] == lower_code]
 
             app = []
             tdate = data["tdate"]
@@ -238,7 +252,7 @@ class HourKlineDownloader:
             last_update_date = self.__lastUpdateDate(code)
             if end_date > last_update_date:
                 filtered_code.append(code)
-        print("file_name : before filtered code {}, filtered code {}".format(len(codes), len(filtered_code)))
+        print("file_name : before filtered code {}, after filtered code {}".format(len(codes), len(filtered_code)))
         return filtered_code
 
     def __filterDates(self, codes, dates):
@@ -297,6 +311,28 @@ class HourKlineDownloader:
             self.__updateGroup(codes=group, dates=dates)
 
 
+class TradeCalender:
+    '''
+    交易日历
+    '''
+    def __init__(self, token, dic) -> None:
+        self.day_loader = DayKlineDownloader(token=token, dic=dic, url_suffix="getStockHSADayKLine",
+                                                file_name="day_line.csv", ktype="101")
+        self.day_loader.updateDayKlines(codes=["000001"], start_date="1990-01-01")
+
+    def getTradeDates(self):
+        data = self.day_loader.loadKline("000001")
+        all_dates = []
+        for date in data["tdate"]:
+            all_dates.append(date)
+        dates = []
+        for i in range(len(all_dates)):
+            dates.append(all_dates[i])
+        y,m,d = dates[-1].split("-")
+        dates.append("{}-01-01".format(str(int(y)+1)))                                          
+        return dates
+        
+
 class StockHSADataset:
     '''
     从 http://www.waizaowang.com/ 获取沪深京A股数据
@@ -307,7 +343,7 @@ class StockHSADataset:
         '''
         self.token = token
         self.url_head = "http://api.waizaowang.com/doc"
-        self.dic = dic
+        self.dic = "{}/stock_hsa".format(dic)
 
         self.day_loader = DayKlineDownloader(token=self.token, dic=self.dic, url_suffix="getStockHSADayKLine",
                                                 file_name="day_line.csv", ktype="101")
@@ -317,13 +353,14 @@ class StockHSADataset:
                                                 file_name="month_line.csv", ktype="103")
 
         self.min5_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getStockHSAHourKLine",
-                                                file_name="min5_line.csv", ktype="5", days_th=1)
+                                                file_name="min5_line.csv", ktype="5", days_th=2)
         self.min15_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getStockHSAHourKLine",
                                                 file_name="min15_line.csv", ktype="15", days_th=5)
         self.min30_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getStockHSAHourKLine",
                                                 file_name="min30_line.csv", ktype="30", days_th=20)
         self.min60_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getStockHSAHourKLine",
                                                 file_name="min60_line.csv", ktype="60", days_th=30)
+        self.trade_calender = TradeCalender(token=self.token, dic="{}/stock_hsa".format(dic))
 
     def updataBaseInfo(self, file_name="/base/info.csv"):
         '''
@@ -366,32 +403,19 @@ class StockHSADataset:
             codes.append(code)
         return codes
 
-    def __getLatestTradeDates(self):
-        data = self.day_loader.updateDayKlines(codes=["000001"], start_date="1990-01-01")
-        all_dates = []
-        for date in data["tdate"]:
-            all_dates.append(date)
-        dates = []
-        for i in range(len(all_dates)):
-            dates.append(all_dates[i])
-        y,m,d = dates[-1].split("-")
-        dates.append("{}-01-01".format(str(int(y)+1)))
-        return dates
-
     def __updateDayKlines(self):
         info = self.loadBaseInfo()
         codes = []
         for code, row in info.iterrows():
             codes.append({"code" : code, "start_date" : row["ssdate"]})
-        end_date = self.__getLatestTradeDates()[-2]
+        end_date = self.trade_calender.getTradeDates()[-2]
         self.day_loader.update(codes, end_date)
         self.week_loader.update(codes, end_date)
         self.month_loader.update(codes, end_date)
 
     def __updateHourLines(self):
-        info = self.loadBaseInfo()
         codes = self.__getAllCodes()
-        trade_dates = self.__getLatestTradeDates()
+        trade_dates = self.trade_calender.getTradeDates()
         trade_dates = trade_dates[-50:]
 
         self.min5_loader.update(codes=codes, dates=trade_dates)
@@ -405,13 +429,13 @@ class StockHSADataset:
         print("update finish ! ^-^")
 
     def loadKline(self, code):
-        day_kline = self.daylines.loadDayKline(code)
-        week_kline = self.daylines.loadWeekKline(code)
-        month_kline = self.daylines.loadMonthKline(code)
-        min5_kline = self.hourlines.load5MinKline(code)
-        min15_kline = self.hourlines.load15MinKline(code)
-        min30_kline = self.hourlines.load30MinKline(code)
-        min60_kline = self.hourlines.load60MinKline(code)
+        day_kline = self.day_loader.loadKline(code)
+        week_kline = self.week_loader.loadKline(code)
+        month_kline = self.month_loader.loadKline(code)
+        min5_kline = self.min5_loader.loadKline(code)
+        min15_kline = self.min15_loader.loadKline(code)
+        min30_kline = self.min30_loader.loadKline(code)
+        min60_kline = self.min60_loader.loadKline(code)
         return {"day":day_kline, "week": week_kline, "month": month_kline,
                 "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
 
@@ -426,8 +450,86 @@ class GloabalIndexDataset:
         '''
         self.token = token
         self.url_head = "http://api.waizaowang.com/doc"
-        self.dic = dic
-        pass
+        self.dic = "{}/index_global".format(dic)
+
+        self.day_loader = DayKlineDownloader(token=self.token, dic=self.dic, url_suffix="getIndexDayKLine",
+                                                file_name="day_line.csv", ktype="101")
+        self.week_loader = DayKlineDownloader(token=self.token, dic=self.dic, url_suffix="getIndexDayKLine",
+                                                file_name="week_line.csv", ktype="102")
+        self.month_loader = DayKlineDownloader(token=self.token, dic=self.dic, url_suffix="getIndexDayKLine",
+                                                file_name="month_line.csv", ktype="103")
+
+        self.min5_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getIndexHourKLine",
+                                                file_name="min5_line.csv", ktype="5", days_th=2)
+        self.min15_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getIndexHourKLine",
+                                                file_name="min15_line.csv", ktype="15", days_th=5)
+        self.min30_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getIndexHourKLine",
+                                                file_name="min30_line.csv", ktype="30", days_th=20)
+        self.min60_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getIndexHourKLine",
+                                                file_name="min60_line.csv", ktype="60", days_th=30)
+        self.trade_calender = TradeCalender(token=self.token, dic="{}/stock_hsa".format(dic))
+        self.default_codes = [  "000001", #上证指数
+                                "000132", #上证100
+                                "000133", #上证150
+                                "000300", #沪深300
+                                "000688", #科创50
+                                "000002", #Ａ股指数
+                                "000003", #Ｂ股指数
+                                "000903", #中证100
+                                "000904", #中证200
+                                "000905", #中证500
+                                "000906", #中证800
+                                "000907", #中证700
+                                "HSI",  #恒生指数
+                                "AEX", #荷兰AEX
+                                "AORD", #澳大利亚普通股
+                                "AS51", #澳大利亚标普200
+                                "ASE", #希腊雅典ASE
+                                "ATX", #奥地利ATX
+                                "AXX", #富时AIM全股
+                                "BDI", #波罗的海BDI指数
+                                "BFX", #比利时BFX
+                                "BVSP", #巴西BOVESPA
+                                "CRB", #路透CRB商品指数
+                                "CSEALL", #斯里兰卡科伦坡
+                                "DJIA", #道琼斯
+                                "FCHI", #法国CAC40
+                                "FTSE", #英国富时100
+                                "GDAXI", #德国DAX30
+                                "HEX", #芬兰赫尔辛基
+                                "IBEX", #西班牙IBEX35
+                                "ICEXI", #冰岛ICEX
+                                "ISEQ", #爱尔兰综合
+                                "JKSE", #印尼雅加达综合
+                                "KLSE", #富时马来西亚KLCI
+                                "KOSPI200", #韩国KOSPI200
+                                "KS11", #韩国KOSPI
+                                "KSE100", #巴基斯坦卡拉奇
+                                "MCX", #英国富时250
+                                "MIB", #富时意大利MIB
+                                "MXX", #墨西哥BOLSA
+                                "N225", #日经225
+                                "NDX", #纳斯达克
+                                "NZ50", #新西兰50
+                                "OMXC20", #OMX哥本哈根20
+                                "OMXSPI", #瑞典OMXSPI
+                                "OSEBX", #挪威OSEBX
+                                "PSI", #菲律宾马尼拉
+                                "PSI20", #葡萄牙PSI20
+                                "PX", #布拉格指数
+                                "RTS", #俄罗斯RTS
+                                "SENSEX", #印度孟买SENSEX
+                                "SET", #泰国SET
+                                "SPX", #标普500
+                                "SSMI", #瑞士SMI
+                                "STI", #富时新加坡海峡时报
+                                "SX5E", #欧洲斯托克50
+                                "TSX", #加拿大S&P/TSX
+                                "TWII", #台湾加权
+                                "UDI", #美元指数
+                                "VNINDEX", #越南胡志明
+                                "WIG", #波兰WIG
+                            ]
 
     def updateIndexInfo(self, file_name="/base/info.csv"):
         '''
@@ -473,7 +575,37 @@ class GloabalIndexDataset:
         data = self.loadIndexInfo()
         return data[data["name"]==name]["code"].values[0]
 
+    def __updateDayKlines(self):
+        codes = []
+        for code in self.default_codes:
+            codes.append({"code" : code, "start_date" : "1990-01-01"})
+        end_date = self.trade_calender.getTradeDates()[-2]
+        self.day_loader.update(codes, end_date)
+        self.week_loader.update(codes, end_date)
+        self.month_loader.update(codes, end_date)
 
-    def update():
-        pass
+    def __updateHourLines(self):
+        codes = self.default_codes
+        trade_dates = self.trade_calender.getTradeDates()
+
+        self.min5_loader.update(codes=codes, dates=trade_dates[-30:])
+        self.min15_loader.update(codes=codes, dates=trade_dates[-30:])
+        self.min30_loader.update(codes=codes, dates=trade_dates[-30:])
+        self.min60_loader.update(codes=codes, dates=trade_dates[-2000:])
+
+    def updateKlineDataset(self):
+        self.__updateDayKlines()
+        self.__updateHourLines()
+        print("update finish ! ^-^")
+
+    def loadKline(self, code):
+        day_kline = self.day_loader.loadKline(code)
+        week_kline = self.week_loader.loadKline(code)
+        month_kline = self.month_loader.loadKline(code)
+        min5_kline = self.min5_loader.loadKline(code)
+        min15_kline = self.min15_loader.loadKline(code)
+        min30_kline = self.min30_loader.loadKline(code)
+        min60_kline = self.min60_loader.loadKline(code)
+        return {"day":day_kline, "week": week_kline, "month": month_kline,
+                "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
 
