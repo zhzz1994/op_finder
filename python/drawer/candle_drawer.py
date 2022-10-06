@@ -7,14 +7,16 @@ class CandleDrawer:
     """
     绘制蜡烛图
     """
-    def __init__(self, data) -> None:
+    def __init__(self, data, y_axis_type="log") -> None:
         '''
         data = {times, candles, ...}
-        candles = [[hign, low, start, end]]
+        candles = [[start, end, low, high]]
+        y_axis = y轴类型["log", "value"]
         '''
         self.chart = Kline()
         self.times = data["times"]
         self.candles = data["candles"]
+        self.y_axis_type = y_axis_type
 
         self.colors = ["red", "yellow"]
         self.color_id = 0
@@ -59,14 +61,14 @@ class CandleDrawer:
                 max_="dataMax",
             ),
             yaxis_opts = opts.AxisOpts(
-                type_ = 'log', 
+                type_ = self.y_axis_type, 
                 is_scale=True,               
                 min_="dataMin", 
                 max_="dataMax", 
                 # min_=14, 
                 # max_=20, 
-                min_interval=1,
-                split_number=10,
+                # min_interval=1,
+                # split_number=10,
             ),
         )
 
