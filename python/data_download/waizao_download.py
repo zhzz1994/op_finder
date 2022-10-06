@@ -333,11 +333,11 @@ class TradeCalender:
         return dates
         
 
-class StockHSADataset:
+class StockHSADownloader:
     '''
     从 http://www.waizaowang.com/ 获取沪深京A股数据
     '''
-    def __init__(self, token, dic) -> None:
+    def __init__(self, dic, token="") -> None:
         '''
         token: api凭证
         '''
@@ -440,11 +440,11 @@ class StockHSADataset:
                 "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
 
 
-class GloabalIndexDataset:
+class GloabalIndexDownloader:
     '''
     从 http://www.waizaowang.com/ 获取指数数据
     '''
-    def __init__(self, token, dic) -> None:
+    def __init__(self,  dic, token) -> None:
         '''
         token: api凭证
         '''
@@ -609,3 +609,34 @@ class GloabalIndexDataset:
         return {"day":day_kline, "week": week_kline, "month": month_kline,
                 "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
 
+
+class KlineDataset:
+    '''
+    加载沪深京A股数据
+    '''
+    def __init__(self, dic) -> None:
+        self.stock_dic = "{}/stock_hsa".format(dic)
+        self.index_dic = "{}/index_global".format(dic)
+
+    def __loadKline(self, path):
+        data = pd.read_csv(path, dtype={'code':object})
+        return data
+
+    def __loadKlines(self, code, dic):
+        day_kline = self.__loadKline("{}/{}/{}".format(dic, code, "day_line.csv"))
+        week_kline = self.__loadKline("{}/{}/{}".format(dic, code, "week_line.csv"))
+        month_kline = self.__loadKline("{}/{}/{}".format(dic, code, "month_line.csv"))
+        min5_kline = self.__loadKline("{}/{}/{}".format(dic, code, "min5_line.csv"))
+        min15_kline = self.__loadKline("{}/{}/{}".format(dic, code, "min15_line.csv"))
+        min30_kline = self.__loadKline("{}/{}/{}".format(dic, code, "min30_line.csv"))
+        min60_kline = self.__loadKline("{}/{}/{}".format(dic, code, "min60_line.csv"))
+        return {"day":day_kline, "week": week_kline, "month": month_kline,
+                "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
+
+    def loadStockHSAKline(self, code):
+        return self.__loadKlines(code=code, dic=self.stock_dic)
+
+    def loadGloabalIndexKline(self, code):
+        return self.__loadKlines(code=code, dic=self.index_dic)
+
+    
