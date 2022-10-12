@@ -224,6 +224,18 @@ class HourKlineDownloader:
 
         url = "{}?code={}&ktype={}&startDate={}&endDate={}&export=5&token={}&fields=all".format(self.url_head, code_str, self.ktype, start_date, end_date, self.token)
         response = requests.get(url).json()
+
+        # 处理错误
+        if response.get("code") == -1:
+            print("WARNNING : {}".format(response.get("message")))
+            code_num = len(codes)
+            if code_num > 1:
+                codes_a = [codes[i] for i in range(0, code_num//2)]
+                codes_b = [codes[i] for i in range(code_num//2, code_num)]
+                self.updateHourKline(codes_a, start_date, end_date)
+                self.updateHourKline(codes_b, start_date, end_date)
+                return
+
         datas = pd.DataFrame(data=response['data'], columns=response['en'])
 
         lower_codes = datas["code"].str.lower()
