@@ -1,6 +1,9 @@
 
 class EMA:
-    pass
+    """EMA(Exponential Moving Average)指数平均数指标
+    """
+    def __init__(self) -> None:
+        pass
 
 
 class MACD:
@@ -17,6 +20,9 @@ class MACD:
 
     def __call__(self, dayline):
         """
-        MACD只能用日线计算,计算时
+        MACD只能用日线计算
         """
+
+
+
         pass
