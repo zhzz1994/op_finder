@@ -35,6 +35,7 @@ class EMA:
         EMA(n) = (n-1/n+1)*EMA(n-1) + (2/n+1)*data[n]
     """
     def __init__(self, n) -> None:
+        self.count = 0
         self.ema = 0
         self.n = n
         self.beta = (n - 1) / (n + 1) 
@@ -46,5 +47,9 @@ class EMA:
         return result
 
     def get_next(self, item):
-        self.ema = self.ema * (self.beta) + (1 - self.beta) * item
+        self.count += 1
+        if self.count > 1:
+            self.ema = self.ema * (self.beta) + (1 - self.beta) * item
+        else:
+            self.ema = item
         return self.ema
