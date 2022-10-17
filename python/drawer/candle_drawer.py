@@ -1,7 +1,7 @@
 from pyecharts import options as opts
 from pyecharts.charts import Kline, Line
 
-from .utils import color_table
+from .utils import color_table, render_line
 
 from ..indicator import MA, EMA
 
@@ -79,34 +79,8 @@ class CandleDrawer:
             ),
         )
 
-    def append_line(self, name, line, color):
-        line = (
-            Line()
-            .add_xaxis(xaxis_data=self.times)
-            .add_yaxis(
-                color=color,
-                series_name=name,
-                y_axis=line,
-                is_smooth=True,
-                linestyle_opts=opts.LineStyleOpts(opacity=0.5),
-                label_opts=opts.LabelOpts(is_show=False),
-            )
-            .set_global_opts(
-                xaxis_opts=opts.AxisOpts(
-                    type_="category",
-                    grid_index=1,
-                    axislabel_opts=opts.LabelOpts(is_show=False),
-                ),
-                yaxis_opts=opts.AxisOpts(
-                    grid_index=1,
-                    split_number=3,
-                    axisline_opts=opts.AxisLineOpts(is_on_zero=False),
-                    axistick_opts=opts.AxisTickOpts(is_show=False),
-                    splitline_opts=opts.SplitLineOpts(is_show=False),
-                    axislabel_opts=opts.LabelOpts(is_show=True),
-                ),
-            )
-        )
+    def append_line(self, name, data, color):
+        line = render_line(data, self.times, color, name)
         self.chart = self.chart.overlap(line)
 
     def render_ma(self, n=5):

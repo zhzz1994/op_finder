@@ -24,7 +24,7 @@ def color_code(color):
 def color_table(index):
     index = index % len(color_map())
     keys = list(color_map().keys())
-    return color_map()[keys[index]]
+    return keys[index]
 
 
 def render_color_bar(datas, axis, name="bar"):
@@ -77,4 +77,34 @@ def render_color_bar(datas, axis, name="bar"):
         ),
     )
     return chart
+
+def render_line(data, axis, color, name="bar"):
+    line = (
+            Line()
+            .add_xaxis(xaxis_data=axis)
+            .add_yaxis(
+                color=color_code(color),
+                series_name=name,
+                y_axis=data,
+                is_smooth=True,
+                linestyle_opts=opts.LineStyleOpts(opacity=0.5),
+                label_opts=opts.LabelOpts(is_show=False),
+            )
+            .set_global_opts(
+                xaxis_opts=opts.AxisOpts(
+                    type_="category",
+                    grid_index=1,
+                    axislabel_opts=opts.LabelOpts(is_show=False),
+                ),
+                yaxis_opts=opts.AxisOpts(
+                    grid_index=1,
+                    split_number=3,
+                    axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+                    axistick_opts=opts.AxisTickOpts(is_show=False),
+                    splitline_opts=opts.SplitLineOpts(is_show=False),
+                    axislabel_opts=opts.LabelOpts(is_show=True),
+                ),
+            )
+        )
+    return line
 
