@@ -1,7 +1,9 @@
 from pyecharts import options as opts
 from pyecharts.charts import Kline, Line
 
-from ..indicator import MA
+from .utils import color_table
+
+from ..indicator import MA, EMA
 
 class CandleDrawer:
     """
@@ -20,6 +22,11 @@ class CandleDrawer:
 
         self.colors = ["red", "yellow"]
         self.color_id = 0
+
+    def __next_color(self):
+        #颜色轮换
+        self.color_id += 1
+        return color_table(self.color_id)
 
     def render_base_candle(self):
         '''
@@ -72,14 +79,14 @@ class CandleDrawer:
             ),
         )
 
-    def __render_ma(self, name, ma_data, color):
+    def append_line(self, name, line, color):
         line = (
             Line()
             .add_xaxis(xaxis_data=self.times)
             .add_yaxis(
                 color=color,
                 series_name=name,
-                y_axis=ma_data,
+                y_axis=line,
                 is_smooth=True,
                 linestyle_opts=opts.LineStyleOpts(opacity=0.5),
                 label_opts=opts.LabelOpts(is_show=False),
@@ -100,22 +107,27 @@ class CandleDrawer:
                 ),
             )
         )
-        return line
-            
-        overlap_kline_line = kline_chart.overlap(ma5_line)
-
+        self.chart = self.chart.overlap(line)
 
     def render_ma(self, n=5):
         '''
         在蜡烛图上绘制移动平均线
         '''
         name = "MA{}".format(n)
-        ma_data = MA(n)(self.candles)
+        data_end = [candle[1] for candle in self.candles]
+        line = MA(n)(data_end)
 
-        #颜色轮换
-        color = self.colors[self.color_id % len(self.colors)]
-        self.color_id += 1
+        color = self.__next_color()
+        self.append_line(name, line, color)
 
-        ma_line= self.__render_ma(name=name, ma_data=ma_data, color=color)
-        # Overlap candle + ma line
-        self.chart = self.chart.overlap(ma_line)
+    def render_ema(self, n=5):
+        '''
+        在蜡烛图上绘制EMA
+        '''
+        name = "EMA{}".format(n)
+        data_end = [candle[1] for candle in self.candles]
+        line = EMA(n)(data_end)
+
+        color = self.__next_color()
+        self.append_line(name, line, color)
+

@@ -1,10 +1,4 @@
-
-class EMA:
-    """EMA(Exponential Moving Average)指数平均数指标
-    """
-    def __init__(self) -> None:
-        pass
-
+from moving_average import EMA
 
 class MACD:
     """

@@ -2,8 +2,9 @@ from pyecharts import options as opts
 from pyecharts.charts import Kline, Bar, Grid, Line, Timeline
 from pyecharts.commons.utils import JsCode
 
-def color_code(color):
-    color_map = {
+
+def color_map():
+    map = {
         "red": "#ef232a",
         "green": "#14b143",
         "orange": "#FF9900",
@@ -12,7 +13,19 @@ def color_code(color):
         "white": "#FFFFFF",
         "black": "#000000",
     }
-    return color_map.get(color, color_map["white"])
+    return map
+
+
+def color_code(color):
+    map = color_map()
+    return map.get(color, map["white"])
+
+
+def color_table(index):
+    index = index % len(color_map())
+    keys = list(color_map().keys())
+    return color_map()[keys[index]]
+
 
 def render_color_bar(datas, axis, name="bar"):
     """绘制彩色状图
