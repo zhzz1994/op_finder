@@ -9,6 +9,8 @@ def color_map():
         "green": "#14b143",
         "orange": "#FF9900",
         "yellow": "#FFFF33",
+        "blue": "#3D5AFF",
+        "purple": "#FF27FF",
         "gray": "#666666",
         "white": "#FFFFFF",
         "black": "#000000",
@@ -78,16 +80,15 @@ def render_color_bar(datas, axis, name="bar"):
     )
     return chart
 
-def render_line(data, axis, color, name="bar"):
+def render_line(data, axis, color, name="line"):
     line = (
             Line()
             .add_xaxis(xaxis_data=axis)
             .add_yaxis(
-                color=color_code(color),
                 series_name=name,
                 y_axis=data,
                 is_smooth=True,
-                linestyle_opts=opts.LineStyleOpts(opacity=0.5),
+                linestyle_opts=opts.LineStyleOpts(opacity=0.5, color=color_code(color), width=2),
                 label_opts=opts.LabelOpts(is_show=False),
             )
             .set_global_opts(

@@ -1,6 +1,9 @@
-from .utils import render_color_bar, render_line
-from ..indicator import MACD
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
+from .utils import render_color_bar, render_line
+from indicator import MACD
 
 
 class MACDDrawer:
@@ -24,11 +27,11 @@ class MACDDrawer:
         self.chart = render_color_bar(datas, self.times, name="macd")
 
     def __add_dea(self, macd_dea):
-        line = render_line(macd_dea, self.times, "orange", "dea")
+        line = render_line(macd_dea, self.times, "red", "dea")
         self.chart.overlap(line)
 
     def __add_diff(self, macd_diff):
-        line = render_line(macd_diff, self.times, "yellow", "diff")
+        line = render_line(macd_diff, self.times, "orange", "diff")
         self.chart.overlap(line)
 
     def render(self):
@@ -36,7 +39,7 @@ class MACDDrawer:
         macd = MACD()(data_end)
         self.__add_bar(macd["bar"])
         self.__add_dea(macd["dea"])
-        self.__add_dea(macd["diff"])
+        self.__add_diff(macd["diff"])
 
 
 

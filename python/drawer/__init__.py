@@ -1,7 +1,3 @@
-import sys
-import os
-sys.path.append(os.path.dirname(__file__))
-
 from .candle_drawer import CandleDrawer
 from .chart_drawer import merge_chart
 from .macd_drawer import MACDDrawer

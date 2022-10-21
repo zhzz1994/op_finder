@@ -1,9 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 from pyecharts import options as opts
 from pyecharts.charts import Kline, Line
 
 from .utils import color_table, render_line
 
-from ..indicator import MA, EMA
+from indicator import MA, EMA
 
 class CandleDrawer:
     """

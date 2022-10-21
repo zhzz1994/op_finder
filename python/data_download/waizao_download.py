@@ -4,6 +4,8 @@ import pandas as pd
 import os
 import datetime
 
+from .stock import Stock
+
 
 def RoughTimeDist(start_date, end_date):
     start_date = start_date.split('-')
@@ -622,6 +624,49 @@ class GloabalIndexDownloader:
                 "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
 
 
+class WaiZaoStock(Stock):
+    '''
+    '''
+    def __init__(self, klines) -> None:
+        """
+        klines = {"day":day_kline, "week": week_kline, "month": month_kline,
+                "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
+        """
+        self.klines = klines
+
+    def day(self):
+        """
+        """
+        day_line = self.klines["day"]
+        times = [item for item in day_line["tdate"]]
+        candles = [line for line in zip(day_line["open"], day_line["close"], day_line["low"], day_line["high"])]
+        # 换手率
+        turnover_rate = [item for item in day_line["hsl"]]
+        # 成交量
+        turnover_count = [item for item in day_line["cjl"]]
+
+        data = {"times": times, "candles": candles, "turnover_rate": turnover_rate, "turnover_count": turnover_count}
+        return data
+
+    def week(self):
+        pass
+
+    def month(self):
+        pass
+
+    def min5(self):
+        pass
+
+    def min15(self):
+        pass
+
+    def min30(self):
+        pass
+
+    def min60(self):
+        pass
+
+
 class KlineDataset:
     '''
     加载沪深京A股数据
@@ -651,4 +696,10 @@ class KlineDataset:
     def loadGloabalIndexKline(self, code):
         return self.__loadKlines(code=code, dic=self.index_dic)
 
+    def Stock(self, code):
+        stock_klines = self.loadStockHSAKline(code)
+        return WaiZaoStock(stock_klines)
+
+    def Index(self, code):
+        pass
     

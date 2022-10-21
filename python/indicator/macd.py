@@ -1,4 +1,4 @@
-from moving_average import EMA
+from .moving_average import EMA
 
 class MACD:
     """
