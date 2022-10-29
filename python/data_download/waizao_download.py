@@ -666,6 +666,21 @@ class WaiZaoStock(Stock):
     def min60(self):
         pass
 
+def fill_stock(kline):
+    times = [item for item in kline["tdate"]]
+    opens = [item for item in kline["open"]]
+    closes = [item for item in kline["close"]]
+    lows = [item for item in kline["low"]]
+    highs = [item for item in kline["high"]]
+    # 换手率
+    turnover_rate = [item for item in kline["hsl"]]
+    # 成交量
+    turnover_count = [item for item in kline["cjl"]]
+    data = {"times": times, "opens": opens, "closes": closes, "lows": lows, "highs": highs, 
+            "turnover_rate": turnover_rate, "turnover_count": turnover_count}
+    stock = Stock(data)
+    return stock
+
 
 class KlineDataset:
     '''
@@ -698,7 +713,10 @@ class KlineDataset:
 
     def Stock(self, code):
         stock_klines = self.loadStockHSAKline(code)
-        return WaiZaoStock(stock_klines)
+        stocks = {}
+        for key in stock_klines:
+            stocks[key] = fill_stock(stock_klines[key])
+        return stocks
 
     def Index(self, code):
         pass

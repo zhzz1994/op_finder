@@ -6,14 +6,12 @@ from drawer import CandleDrawer, TurnoverRateDrawer, TurnoverCountDrawer, MACDDr
 
 
 class DayChart:
-    '''
-    '''
-    def __init__(self, data) -> None:
-        self.data = data
+    def __init__(self, stock) -> None:
+        self.stock = stock
 
-    def candle_chart(self):
-        candle_chart = CandleDrawer(self.data)
-        candle_chart.render_base_candle()
+    def candle_chart(self, min="dataMin", max="dataMax"):
+        candle_chart = CandleDrawer(self.stock)
+        candle_chart.render_base_candle(min=min, max=max)
 
         candle_chart.render_ema(20)
         candle_chart.render_ema(5)
@@ -22,17 +20,17 @@ class DayChart:
         return candle_chart.chart
 
     def turnovers_rate_chart(self):
-        turnovers_rate_chart = TurnoverRateDrawer(self.data)
+        turnovers_rate_chart = TurnoverRateDrawer(self.stock)
         turnovers_rate_chart.render()
         return turnovers_rate_chart.chart
 
     def turnovers_count_chart(self):
-        turnovers_count_chart = TurnoverCountDrawer(self.data)
+        turnovers_count_chart = TurnoverCountDrawer(self.stock)
         turnovers_count_chart.render()
         return turnovers_count_chart.chart
 
     def macd_chart(self):
-        macd_chart = MACDDrawer(self.data)
+        macd_chart = MACDDrawer(self.stock)
         macd_chart.render()
         return macd_chart.chart
 

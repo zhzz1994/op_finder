@@ -9,13 +9,9 @@ from indicator import MACD
 class MACDDrawer:
     """绘制MACD chart
     """
-    def __init__(self, data) -> None:
-        '''
-        data = {times, candles, ...}
-        candles = [[start, end, low, high]]
-        '''
-        self.times = data["times"]
-        self.candles = data["candles"]
+    def __init__(self, stock) -> None:
+        self.times = stock.times
+        self.closes = stock.closes
 
     def __add_bar(self, macd_bar):
         datas = []
@@ -35,8 +31,7 @@ class MACDDrawer:
         self.chart.overlap(line)
 
     def render(self):
-        data_end = [candle[1] for candle in self.candles]
-        macd = MACD()(data_end)
+        macd = MACD()(self.closes)
         self.__add_bar(macd["bar"])
         self.__add_dea(macd["dea"])
         self.__add_diff(macd["diff"])
