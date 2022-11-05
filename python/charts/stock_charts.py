@@ -8,6 +8,7 @@ from drawer import CandleDrawer, TurnoverRateDrawer, TurnoverCountDrawer, MACDDr
 class DayChart:
     def __init__(self, stock) -> None:
         self.stock = stock
+        self.reference = {}
 
     def candle_chart(self, min="dataMin", max="dataMax"):
         candle_chart = CandleDrawer(self.stock)
@@ -17,7 +18,25 @@ class DayChart:
         candle_chart.render_ema(5)
         candle_chart.render_ma(20)
         candle_chart.render_ma(5)
+        if self.reference:
+            candle_chart.append_line(name="reference", time=self.reference["times"], data=self.reference["datas"])
         return candle_chart.chart
+
+    def add_reference(self, stock, start_date=""):
+        ref_data = stock.get_data(start_date)
+        data = self.stock.get_data(start_date)
+        start_date = ref_data["times"] if ref_data["times"] > data["times"] else data["times"]
+        ref_data = stock.get_data(start_date)
+        data = self.stock.get_data(start_date)
+
+        scale = ref_data["closes"] / data["closes"]
+        times = []
+        closes = []
+        for time, close in zip(stock.times, stock.closes):
+            if time >= start_date:
+                times.append(time)
+                closes.append(close / scale)
+        self.reference = {"times": times, "datas": closes}
 
     def turnovers_rate_chart(self):
         turnovers_rate_chart = TurnoverRateDrawer(self.stock)

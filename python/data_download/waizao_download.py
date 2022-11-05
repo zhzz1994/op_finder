@@ -719,5 +719,9 @@ class KlineDataset:
         return stocks
 
     def Index(self, code):
-        pass
+        stock_klines = self.loadGloabalIndexKline(code)
+        stocks = {}
+        for key in stock_klines:
+            stocks[key] = fill_stock(stock_klines[key])
+        return stocks
     

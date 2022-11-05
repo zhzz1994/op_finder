@@ -91,8 +91,9 @@ class CandleDrawer:
             ),
         )
 
-    def append_line(self, name, data, color):
-        line = render_line(data, self.stock.times, color, name)
+    def append_line(self, name, time, data):
+        color = self.__next_color()
+        line = render_line(data, time, color, name)
         self.chart = self.chart.overlap(line)
 
     def render_ma(self, n=5):
@@ -101,9 +102,7 @@ class CandleDrawer:
         '''
         name = "MA{}".format(n)
         line = MA(n)(self.stock.closes)
-
-        color = self.__next_color()
-        self.append_line(name, line, color)
+        self.append_line(name, self.stock.times, line)
 
     def render_ema(self, n=5):
         '''
@@ -111,7 +110,5 @@ class CandleDrawer:
         '''
         name = "EMA{}".format(n)
         line = EMA(n)(self.stock.closes)
-
-        color = self.__next_color()
-        self.append_line(name, line, color)
+        self.append_line(name, self.stock.times, line)
 
