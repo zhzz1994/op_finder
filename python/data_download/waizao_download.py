@@ -459,6 +459,72 @@ class StockHSADownloader:
                 "min5":min5_kline, "min15":min15_kline, "min30":min30_kline, "min60":min60_kline}
 
 
+def index_table():
+    index_table = { "000001" : "上证指数", 
+                    "000132": "上证100",
+                    "000133": "上证150",
+                    "000300": "沪深300",
+                    "000688": "科创50",
+                    "000002": "Ａ股指数",
+                    "000003": "Ｂ股指数",
+                    "000903": "中证100",
+                    "000904": "中证200",
+                    "000905": "中证500",
+                    "000906": "中证800",
+                    "000907": "中证700",
+                    "HSI": "恒生指数",
+                    "AEX": "荷兰AEX",
+                    "AORD": "澳大利亚普通股",
+                    "AS51": "澳大利亚标普200",
+                    "ASE": "希腊雅典ASE",
+                    "ATX": "奥地利ATX",
+                    "AXX": "富时AIM全股",
+                    "BDI": "波罗的海BDI指数",
+                    "BFX": "比利时BFX",
+                    "BVSP": "巴西BOVESPA",
+                    "CRB": "路透CRB商品指数",
+                    "CSEALL": "斯里兰卡科伦坡",
+                    "DJIA": "道琼斯",
+                    "FCHI": "法国CAC40",
+                    "FTSE": "英国富时100",
+                    "GDAXI": "德国DAX30",
+                    "HEX": "芬兰赫尔辛基",
+                    "IBEX": "西班牙IBEX35",
+                    "ICEXI": "冰岛ICEX",
+                    "ISEQ": "爱尔兰综合",
+                    "JKSE": "印尼雅加达综合",
+                    "KLSE": "富时马来西亚KLCI",
+                    "KOSPI200": "韩国KOSPI200",
+                    "KS11": "韩国KOSPI",
+                    "KSE100": "巴基斯坦卡拉奇",
+                    "MCX": "英国富时250",
+                    "MIB": "富时意大利MIB",
+                    "MXX": "墨西哥BOLSA",
+                    "N225": "日经225",
+                    "NDX": "纳斯达克",
+                    "NZ50": "新西兰50",
+                    "OMXC20": "OMX哥本哈根20",
+                    "OMXSPI": "瑞典OMXSPI",
+                    "OSEBX": "挪威OSEBX",
+                    "PSI": "菲律宾马尼拉",
+                    "PSI20": "葡萄牙PSI20",
+                    "PX": "布拉格指数",
+                    "RTS": "俄罗斯RTS",
+                    "SENSEX": "印度孟买SENSEX",
+                    "SET": "泰国SET",
+                    "SPX": "标普500",
+                    "SSMI": "瑞士SMI",
+                    "STI": "富时新加坡海峡时报",
+                    "SX5E": "欧洲斯托克50",
+                    "TSX": "加拿大S&P/TSX",
+                    "TWII": "台湾加权",
+                    "UDI": "美元指数",
+                    "VNINDEX": "越南胡志明",
+                    "WIG": "波兰WIG",
+    }
+    return index_table
+
+
 class GloabalIndexDownloader:
     '''
     从 http://www.waizaowang.com/ 获取指数数据
@@ -487,68 +553,7 @@ class GloabalIndexDownloader:
         self.min60_loader = HourKlineDownloader(token=self.token, dic=self.dic, url_suffix="getIndexHourKLine",
                                                 file_name="min60_line.csv", ktype="60", days_th=30)
         self.trade_calender = TradeCalender(token=self.token, dic="{}/stock_hsa".format(dic))
-        self.default_codes = [  "000001", #上证指数
-                                "000132", #上证100
-                                "000133", #上证150
-                                "000300", #沪深300
-                                "000688", #科创50
-                                "000002", #Ａ股指数
-                                "000003", #Ｂ股指数
-                                "000903", #中证100
-                                "000904", #中证200
-                                "000905", #中证500
-                                "000906", #中证800
-                                "000907", #中证700
-                                "HSI",  #恒生指数
-                                "AEX", #荷兰AEX
-                                "AORD", #澳大利亚普通股
-                                "AS51", #澳大利亚标普200
-                                "ASE", #希腊雅典ASE
-                                "ATX", #奥地利ATX
-                                "AXX", #富时AIM全股
-                                "BDI", #波罗的海BDI指数
-                                "BFX", #比利时BFX
-                                "BVSP", #巴西BOVESPA
-                                "CRB", #路透CRB商品指数
-                                "CSEALL", #斯里兰卡科伦坡
-                                "DJIA", #道琼斯
-                                "FCHI", #法国CAC40
-                                "FTSE", #英国富时100
-                                "GDAXI", #德国DAX30
-                                "HEX", #芬兰赫尔辛基
-                                "IBEX", #西班牙IBEX35
-                                "ICEXI", #冰岛ICEX
-                                "ISEQ", #爱尔兰综合
-                                "JKSE", #印尼雅加达综合
-                                "KLSE", #富时马来西亚KLCI
-                                "KOSPI200", #韩国KOSPI200
-                                "KS11", #韩国KOSPI
-                                "KSE100", #巴基斯坦卡拉奇
-                                "MCX", #英国富时250
-                                "MIB", #富时意大利MIB
-                                "MXX", #墨西哥BOLSA
-                                "N225", #日经225
-                                "NDX", #纳斯达克
-                                "NZ50", #新西兰50
-                                "OMXC20", #OMX哥本哈根20
-                                "OMXSPI", #瑞典OMXSPI
-                                "OSEBX", #挪威OSEBX
-                                "PSI", #菲律宾马尼拉
-                                "PSI20", #葡萄牙PSI20
-                                "PX", #布拉格指数
-                                "RTS", #俄罗斯RTS
-                                "SENSEX", #印度孟买SENSEX
-                                "SET", #泰国SET
-                                "SPX", #标普500
-                                "SSMI", #瑞士SMI
-                                "STI", #富时新加坡海峡时报
-                                "SX5E", #欧洲斯托克50
-                                "TSX", #加拿大S&P/TSX
-                                "TWII", #台湾加权
-                                "UDI", #美元指数
-                                "VNINDEX", #越南胡志明
-                                "WIG", #波兰WIG
-                            ]
+        self.code_table = index_table()
 
     def updateIndexInfo(self, file_name="/base/info.csv"):
         '''
@@ -596,7 +601,7 @@ class GloabalIndexDownloader:
 
     def __updateDayKlines(self):
         codes = []
-        for code in self.default_codes:
+        for code in self.code_table:
             codes.append({"code" : code, "start_date" : "1990-01-01"})
         end_date = self.trade_calender.getTradeDates()[-2]
         self.day_loader.update(codes, end_date)
@@ -604,7 +609,9 @@ class GloabalIndexDownloader:
         self.month_loader.update(codes, end_date)
 
     def __updateHourLines(self):
-        codes = self.default_codes
+        codes = []
+        for code in self.code_table:
+            codes.append(code)
         trade_dates = self.trade_calender.getTradeDates()
 
         self.min5_loader.update(codes=codes, dates=trade_dates[-30:])
@@ -671,6 +678,7 @@ class WaiZaoStock(Stock):
     def min60(self):
         pass
 
+
 def fill_stock(kline):
     times = [item for item in kline["tdate"]]
     opens = [item for item in kline["open"]]
@@ -730,3 +738,13 @@ class KlineDataset:
             stocks[key] = fill_stock(stock_klines[key])
         return stocks
     
+    def IndexTables(self):
+        return index_table()
+
+    def StockTables(self):
+        path = self.stock_dic + "/base/info.csv"
+        info = pd.read_csv(path, dtype={'code':object}, index_col=['code'])
+        stock_table = {}
+        for code, row in info.iterrows():
+            stock_table[code] = row["name"]
+        return stock_table
