@@ -84,7 +84,12 @@ class DayKlineDownloader:
 
         url = "{}?code={}&ktype={}&fq=1&startDate={}&endDate={}&export=5&token={}&fields=all".format(self.url_head, code_str, self.ktype, start_date, end_date, self.token)
         response = requests.get(url).json()
-        datas = pd.DataFrame(data=response['data'], columns=response['en'])
+        try:
+            datas = pd.DataFrame(data=response['data'], columns=response['en'])
+        except KeyError as e:
+            print(e)
+            print(response)
+            raise e
 
         lower_codes = datas["code"].str.lower()
         datas["code"] = lower_codes
