@@ -6,12 +6,13 @@ from drawer import CandleDrawer, TurnoverRateDrawer, TurnoverCountDrawer, MACDDr
 
 
 class DayChart:
-    def __init__(self, stock) -> None:
+    def __init__(self, stock, chart_type="log") -> None:
         self.stock = stock
         self.reference = {}
+        self.chart_type = chart_type
 
     def candle_chart(self, min="dataMin", max="dataMax"):
-        candle_chart = CandleDrawer(self.stock)
+        candle_chart = CandleDrawer(self.stock, y_axis_type=self.chart_type)
         candle_chart.render_base_candle(min=min, max=max)
 
         candle_chart.render_ema(20)

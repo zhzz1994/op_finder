@@ -97,3 +97,17 @@ class DateSelecter:
 
     def choosen_date(self):
         return str(self.date_picker.value)
+
+
+class ChartTypeSelecter:
+    def draw(self):
+        type_list = ["log", "value"]
+        self.type_selecter = widgets.Dropdown(
+            options=type_list,
+            description='Chart Type:',
+            disabled=False,
+        )
+        display(self.type_selecter)
+
+    def choosen_type(self):
+        return self.type_selecter.value
