@@ -104,7 +104,7 @@ class DayKlineDownloader:
         last_date = init_date
         path = self.__getPath(code)
         if os.path.exists(path):
-            data = data = pd.read_csv(path, dtype={'code':object})
+            data = pd.read_csv(path, dtype={'code':object})
             date = data["tdate"][-1:].values
             if date:
                 last_date = date[0]
