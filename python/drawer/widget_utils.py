@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import datetime
 import ipywidgets as widgets
 
 
@@ -47,27 +48,27 @@ class StockSelecter:
         display(self.cache_selecter)
 
     def choosen_name(self):
-        return self.index_selecter.value
+        return self.cache_selecter.value
 
     def choosen_code(self):
         choosen_name = self.choosen_name()
-        for key in self.index_table:
-            if choosen_name == self.index_table[key]:
+        for key in self.stock_table:
+            if choosen_name == self.stock_table[key]:
                 return key
 
     def draw_all(self):
         stock_list = []
         for key in self.stock_table:
             stock_list.append(self.stock_table[key])
-        self.stock_cache_selecter = widgets.Dropdown(
+        self.stock_all_selecter = widgets.Dropdown(
             options=stock_list,
             description='Stock:',
             disabled=False,
         )
-        display(self.stock_cache_selecter)
+        display(self.stock_all_selecter)
 
     def cache_selected(self):
-        name = self.stock_cache_selecter.value
+        name = self.stock_all_selecter.value
         code = ""
         for key in self.stock_table:
             if self.stock_table[key] == name:
@@ -84,3 +85,15 @@ class StockSelecter:
             data = pd.DataFrame(data=data_line, columns=["code", "name"])
         data.to_csv(self.cache_path, index = 0)
     
+
+class DateSelecter:
+    def draw(self, year=2020, month=1, day=1):
+        self.date_picker = widgets.DatePicker(
+            description='Start Date',
+            disabled=False,
+        )
+        self.date_picker.value = datetime.date(year, month, day)
+        display(self.date_picker)
+
+    def choosen_date(self):
+        return str(self.date_picker.value)
