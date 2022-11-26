@@ -5,8 +5,9 @@ import ipywidgets as widgets
 
 
 class IndexSelecter:
-    def __init__(self, dataset):
+    def __init__(self, dataset, name="Index"):
         self.index_table = dataset.IndexTables()
+        self.name = name
 
     def draw(self):
         index_list = []
@@ -14,7 +15,7 @@ class IndexSelecter:
             index_list.append(self.index_table[key])
         self.index_selecter = widgets.Dropdown(
             options=index_list,
-            description='Index:',
+            description=self.name,
             disabled=False,
         )
         display(self.index_selecter)
@@ -30,9 +31,10 @@ class IndexSelecter:
 
 
 class StockSelecter:
-    def __init__(self, dataset, cache_path = "cache/stock_code_cache.csv"):
+    def __init__(self, dataset, name="Stock", cache_path = "cache/stock_code_cache.csv"):
         self.stock_table = dataset.StockTables()
         self.cache_path = cache_path
+        self.name = name
 
     def draw(self):
         stock_list = []
@@ -42,7 +44,7 @@ class StockSelecter:
                 stock_list.append(row["name"])
         self.cache_selecter = widgets.Dropdown(
             options=stock_list,
-            description='Stock Cache:',
+            description=self.name + ' Cache:',
             disabled=False,
         )
         display(self.cache_selecter)
@@ -62,7 +64,7 @@ class StockSelecter:
             stock_list.append(self.stock_table[key])
         self.stock_all_selecter = widgets.Dropdown(
             options=stock_list,
-            description='Stock:',
+            description=self.name,
             disabled=False,
         )
         display(self.stock_all_selecter)
@@ -82,14 +84,18 @@ class StockSelecter:
             if code not in data["code"].values:
                 data = pd.concat([data_line, data])
         else:
+            os.makedirs(os.path.dirname(self.cache_path))
             data = pd.DataFrame(data=data_line, columns=["code", "name"])
         data.to_csv(self.cache_path, index = 0)
     
 
 class DateSelecter:
+    def __init__(self, name="Date"):
+        self.name = name
+
     def draw(self, year=2020, month=1, day=1):
         self.date_picker = widgets.DatePicker(
-            description='Start Date',
+            description=self.name,
             disabled=False,
         )
         self.date_picker.value = datetime.date(year, month, day)
@@ -101,13 +107,23 @@ class DateSelecter:
 
 class ChartTypeSelecter:
     def draw(self):
-        type_list = ["log", "value"]
-        self.type_selecter = widgets.Dropdown(
-            options=type_list,
+        draw_type_list = ["log", "value"]
+        self.draw_type_selecter = widgets.Dropdown(
+            options=draw_type_list,
+            description='Draw Type:',
+            disabled=False,
+        )
+        display(self.draw_type_selecter)
+        chart_type_list = ["day", "week", "month", "min5", "min15", "min30", "min60"]
+        self.chart_type_selecter = widgets.Dropdown(
+            options=chart_type_list,
             description='Chart Type:',
             disabled=False,
         )
-        display(self.type_selecter)
+        display(self.chart_type_selecter)
 
-    def choosen_type(self):
-        return self.type_selecter.value
+    def draw_type(self):
+        return self.draw_type_selecter.value
+
+    def chart_type(self):
+        return self.chart_type_selecter.value
